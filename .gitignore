@@ -1,0 +1,25 @@
+# Env files
+.env
+.env.*
+!.env.example
+
+# Go build artifacts
+bin/
+build/
+dist/
+*.out
+coverage.*
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Docker / Compose
+docker-compose.override.yml
+
+# Misc
+tmp/
+*.log
+
+

@@ -1,0 +1,107 @@
+openapi: 3.0.3
+info:
+  title: Cold Cache User Service
+  version: 1.0.0
+  description: |
+    Read-through cache API with hot/cold paths.
+    - Hot storage: Redis (cache hit, fastest)
+    - Cold storage: PostgreSQL (authoritative on cache miss)
+servers:
+  - url: http://localhost:8080
+paths:
+  /v1/users:
+    get:
+      summary: Get user by ID
+      operationId: getUser
+      parameters:
+        - in: query
+          name: user_id
+          schema:
+            type: string
+            pattern: '^[A-Za-z0-9_\-]{1,20}$'
+            maxLength: 20
+          required: true
+          description: User identifier (PK)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ColdCacheResponse'
+              examples:
+                hot_hit:
+                  value:
+                    code: 200
+                    message: ok:redis
+                    user_id: someid
+                    deeplink: ""
+                    promo_message: ""
+                    cache_hit: true
+                    metadata:
+                      timestamp: '2025-01-01T00:00:00Z'
+                      version: v1
+                cold_miss:
+                  value:
+                    code: 200
+                    message: ok:postgres
+                    user_id: someid
+                    deeplink: ""
+                    promo_message: ""
+                    cache_hit: false
+                    metadata:
+                      timestamp: '2025-01-01T00:00:00Z'
+                      version: v1
+        '400':
+          description: Invalid user_id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ColdCacheResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ColdCacheResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ColdCacheResponse'
+components:
+  schemas:
+    MetaData:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        version:
+          type: string
+      required: [timestamp, version]
+    ColdCacheResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 200
+        message:
+          type: string
+        user_id:
+          type: string
+          nullable: true
+        deeplink:
+          type: string
+          nullable: true
+        promo_message:
+          type: string
+          nullable: true
+        cache_hit:
+          type: boolean
+        metadata:
+          $ref: '#/components/schemas/MetaData'
+      required: [code, message, cache_hit, metadata]
+
+
